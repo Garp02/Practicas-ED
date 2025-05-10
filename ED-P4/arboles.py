@@ -1,7 +1,7 @@
 """
 Munive Ramírez Ibrahim
 cuenta: 424106083
-García Rubio Asteinza Ana Sofía
+García Rubio Asteinza Ana Sofía (no hizo nada)
 cuenta: 3231 
 """
 
