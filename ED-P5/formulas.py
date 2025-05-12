@@ -86,8 +86,34 @@ class Formula:
 
     # Devuelve la lista de todas las variables que ocurren en una fórmula, en orden.
     def lista_variables(self):
+
+        # Si es una variable
+        if self.conectivo is None:
+
+            return [self.izquierda]
         
-        return []
+        # Si es una negación
+        elif self.conectivo == 'N':
+
+            return self.izquierda.lista_variables()
+        
+        # Si es un conectivo binario
+        else:
+
+            # Combinar las variables de ambas subfórmulas
+            izq_vars = self.izquierda.lista_variables()
+            der_vars = [] if self.derecha is None else self.derecha.lista_variables()
+            
+            # Eliminar duplicados manteniendo el orden
+            resultado = []
+
+            for var in izq_vars + der_vars:
+
+                if var not in resultado:
+
+                    resultado.append(var)
+            
+            return resultado
 
     # Devuelve la última variable que ocurre en una fórmula.
     def ultima_variable(self):
