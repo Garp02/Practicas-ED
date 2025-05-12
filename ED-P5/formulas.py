@@ -117,13 +117,43 @@ class Formula:
 
     # Devuelve la última variable que ocurre en una fórmula.
     def ultima_variable(self):
+
+        # Si es una variable
         
-        return 0
+        if self.conectivo is None:
+        
+            return self.izquierda
+        
+        # Si es una negación
+        elif self.conectivo == 'N':
+        
+            return self.izquierda.ultima_variable()
+        
+        # Si es un conectivo binario
+        else:
+        
+            # Obtener la última variable de la subfórmula izquierda
+            izq_var = self.izquierda.ultima_variable()
+            
+            # Obtener la última variable de la subfórmula derecha (si existe)
+            der_var = 0 if self.derecha is None else self.derecha.ultima_variable()
+            
+            # Devolver la mayor de las dos
+            return max(izq_var, der_var)
 
     # Devuelve el número de conectivos que ocurren en la fórmula.
     def numero_conectivos(self):
+        # Si es una variable
+        if self.conectivo is None:
+            return 0
         
-        return 0
+        # Si es una negación
+        elif self.conectivo == 'N':
+            return 1 + self.izquierda.numero_conectivos()
+        
+        # Si es un conectivo binario
+        else:
+            return 1 + self.izquierda.numero_conectivos() + self.derecha.numero_conectivos()
 
     # Función auxiliar para evaluar una fórmula
     def _evalua_aux(self, asignacion: Asignacion, posiciones: List[int]):
