@@ -20,7 +20,7 @@ class Formula:
         que ser una fórmula.
         """
 
-        conectivos = ['C','D','I','E','N']
+        conectivos = ['C','D','I','E','N','B']
 
         if (conectivo == None and not (isinstance(izquierda, int) and izquierda > -1)):
             
@@ -78,7 +78,7 @@ class Formula:
             return f'({self.izquierda} → {self.derecha})'
         
         # Si es un bicondicional (equivalencia)
-        elif self.conectivo == 'E':
+        elif self.conectivo == 'E' or self.conectivo == 'B':
         
             return f'({self.izquierda} ↔ {self.derecha})'
 
@@ -107,19 +107,14 @@ class Formula:
             # Eliminar duplicados manteniendo el orden
             resultado = []
 
-            for var in izq_vars + der_vars:
-
-                if var not in resultado:
-
-                    resultado.append(var)
-            
-            return resultado
+            # Ordenar las variables numéricamente para asegurar consistencia
+            todas_vars = sorted(set(izq_vars + der_vars))
+            return todas_vars
 
     # Devuelve la última variable que ocurre en una fórmula.
     def ultima_variable(self):
 
         # Si es una variable
-        
         if self.conectivo is None:
         
             return self.izquierda
@@ -143,34 +138,108 @@ class Formula:
 
     # Devuelve el número de conectivos que ocurren en la fórmula.
     def numero_conectivos(self):
+
         # Si es una variable
         if self.conectivo is None:
+        
             return 0
         
         # Si es una negación
         elif self.conectivo == 'N':
+        
             return 1 + self.izquierda.numero_conectivos()
         
         # Si es un conectivo binario
         else:
+        
             return 1 + self.izquierda.numero_conectivos() + self.derecha.numero_conectivos()
 
     # Función auxiliar para evaluar una fórmula
-    def _evalua_aux(self, asignacion: Asignacion, posiciones: List[int]):
+    def _evalua_aux(self, asignacion: Asignacion, posiciones: dict):
+
+        # Si es una variable
+        if self.conectivo is None:
         
-        return 0
+            # Devuelve el valor de la variable en la asignación
+            return asignacion[posiciones[self.izquierda]]
+        
+        # Si es una negación
+        elif self.conectivo == 'N':
+        
+            # Niega el valor de la subfórmula izquierda
+            return 1 - self.izquierda._evalua_aux(asignacion, posiciones)
+        
+        # Si es una conjunción
+        elif self.conectivo == 'C':
+        
+            # Devuelve la conjunción de las subfórmulas
+            return self.izquierda._evalua_aux(asignacion, posiciones) and self.derecha._evalua_aux(asignacion, posiciones)
+        
+        # Si es una disyunción
+        elif self.conectivo == 'D':
+        
+            # Devuelve la disyunción de las subfórmulas
+            return self.izquierda._evalua_aux(asignacion, posiciones) or self.derecha._evalua_aux(asignacion, posiciones)
+        
+        # Si es una implicación
+        elif self.conectivo == 'I':
+        
+            # Devuelve la implicación de las subfórmulas
+            return (not self.izquierda._evalua_aux(asignacion, posiciones)) or self.derecha._evalua_aux(asignacion, posiciones)
+        
+        # Si es un bicondicional
+        elif self.conectivo == 'E' or self.conectivo == 'B':
+        
+            # Devuelve el bicondicional de las subfórmulas
+            izq = self.izquierda._evalua_aux(asignacion, posiciones)
+            der = self.derecha._evalua_aux(asignacion, posiciones)
+        
+            return (not izq or der) and (not der or izq)
 
     # Devuelve el valor de verdad de la fórmula bajo una asignación dada.
     def evalua(self, asignacion: Asignacion):
+      
+        # Obtener la lista de variables en la fórmula
+        variables = self.lista_variables()
         
-        return 0
+        # Crear un diccionario para mapear cada variable a su posición en la asignación
+        posiciones = {var: i for i, var in enumerate(variables)}
+        
+        # Evaluar la fórmula con la asignación dada
+        return self._evalua_aux(asignacion, posiciones)
 
     # Devuleve una lista con la versión aplanada del árbol de sintáxis de la fórmula.
     def aplana(self):
-
-        return []
+       
+        # Si es una variable
+        if self.conectivo is None:
+       
+            return [self.izquierda]
+        
+        # Si es una negación
+        elif self.conectivo == 'N':
+       
+            return [self.conectivo] + self.izquierda.aplana()
+        
+        # Si es un conectivo binario
+        else:
+           
+            return [self.conectivo] + self.izquierda.aplana() + self.derecha.aplana()
 
     # Devuelve una lista con la versión aplanada del árbol de sintáxis de la fórmula, sin las hojas.
     def aplana_sin_variables(self):
-
-        return []
+      
+        # Si es una variable
+        if self.conectivo is None:
+      
+            return []
+        
+        # Si es una negación
+        elif self.conectivo == 'N':
+        
+            return [self.conectivo] + self.izquierda.aplana_sin_variables()
+        
+        # Si es un conectivo binario
+        else:
+        
+            return [self.conectivo] + self.izquierda.aplana_sin_variables() + self.derecha.aplana_sin_variables()
