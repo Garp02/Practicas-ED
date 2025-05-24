@@ -51,38 +51,19 @@ class Formula:
  
     # Representación en cadena, legible para humanos, de las fórmulas.
     def __repr__(self):
-
-        # Si es una variable
         if self.conectivo is None:
-            
-            return f'x{self.izquierda}'
-        
-        # Si es una negación
+            return f"x{self.izquierda}"
         elif self.conectivo == 'N':
-        
-            return f'(¬{self.izquierda})'
-        
-        # Si es una conjunción
-        elif self.conectivo == 'C':
-        
-            return f'({self.izquierda} ∧ {self.derecha})'
-        
-        # Si es una disyunción
-        elif self.conectivo == 'D':
-        
-            return f'({self.izquierda} ∨ {self.derecha})'
-        
-        # Si es una implicación
-        elif self.conectivo == 'I':
-        
-            return f'({self.izquierda} → {self.derecha})'
-        
-        # Si es un bicondicional (equivalencia)
-        elif self.conectivo == 'E' or self.conectivo == 'B':
-        
-            return f'({self.izquierda} ↔ {self.derecha})'
-
-        return ""
+            return f"(¬{self.izquierda.__repr__()})"
+        else:
+            operadores = {
+                'C': '∧',
+                'D': '∨',
+                'I': '→',
+                'E': '↔',
+                'B': '↔'
+            }
+            return f"({self.izquierda.__repr__()} {operadores[self.conectivo]} {self.derecha.__repr__()})"
 
     # Devuelve la lista de todas las variables que ocurren en una fórmula, en orden.
     def lista_variables(self):
