@@ -50,54 +50,61 @@ class Formula:
 
 
     # Devuelve el renglón con esa asignación de la tabla de verdad.
-    def evalua_sub(self,asignacion: Asignacion):
+    def evalua_sub(self, asignacion: Asignacion) -> List[bool]:
+    
+    valores = []
+
+    # Función recursiva que evalúa la fórmula y devuelve el valor de verdad
+    def evalua(f):
         
-        valores = []
+        if f.conectivo is None:
+        
+            valor = asignacion[f.izquierda - 1]
+            valores.append(valor)
+        
+            return valor
+        
+        elif f.conectivo == 'N':
+        
+            izq = evalua(f.izquierda)
+            valor = not izq
+            valores.append(valor)
+        
+            return valor
+        
+        else:
 
-        def evalua(f):
+            izq = evalua(f.izquierda)
+            der = evalua(f.derecha)
 
-            if f.conectivo is None:
+            if f.conectivo == 'C':
             
-                valor = asignacion[f.izquierda - 1]
-                valores.append(valor)
+                valor = izq and der
             
-                return valor
+            elif f.conectivo == 'D':
             
-            elif f.conectivo == 'N':
+                valor = izq or der
             
-                valor = not evalua(f.izquierda)
+            elif f.conectivo == 'I':
             
-            else:
+                valor = (not izq) or der
             
-                izq = evalua(f.izquierda)
-                der = evalua(f.derecha)
+            elif f.conectivo == 'E':
             
-                if f.conectivo == 'C': 
-                    
-                    valor = izq and der
-            
-                elif f.conectivo == 'D': 
-                    
-                    valor = izq or der
-            
-                elif f.conectivo == 'I': 
-                    
-                    valor = (not izq) or der
-            
-                elif f.conectivo == 'E': 
-                    
-                    valor = izq == der
+                valor = izq == der
             
             valores.append(valor)
+            
             return valor
 
-            evalua(self)
-            return valores
+    evalua(self)
+    return valores
+
 
 
     # Devuelve una lista de listas correspondientes a la tabla de verdad
     def renglones_verdad(self):
-        
+    
         return []
 
 
