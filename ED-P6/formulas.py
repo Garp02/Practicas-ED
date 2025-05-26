@@ -52,69 +52,126 @@ class Formula:
     # Devuelve el renglón con esa asignación de la tabla de verdad.
     def evalua_sub(self, asignacion: Asignacion) -> List[bool]:
     
-    valores = []
+        valores = []
 
-    # Función recursiva que evalúa la fórmula y devuelve el valor de verdad
-    def evalua(f):
-        
-        if f.conectivo is None:
-        
-            valor = asignacion[f.izquierda - 1]
-            valores.append(valor)
-        
-            return valor
-        
-        elif f.conectivo == 'N':
-        
-            izq = evalua(f.izquierda)
-            valor = not izq
-            valores.append(valor)
-        
-            return valor
-        
-        else:
+        # Función recursiva que evalúa la fórmula y devuelve el valor de verdad
+        def evalua(f):
+            
+            if f.conectivo is None:
+            
+                valor = asignacion[f.izquierda - 1]
+                valores.append(valor)
+            
+                return valor
+            
+            elif f.conectivo == 'N':
+            
+                izq = evalua(f.izquierda)
+                valor = not izq
+                valores.append(valor)
+            
+                return valor
+            
+            else:
 
-            izq = evalua(f.izquierda)
-            der = evalua(f.derecha)
+                izq = evalua(f.izquierda)
+                der = evalua(f.derecha)
 
-            if f.conectivo == 'C':
-            
-                valor = izq and der
-            
-            elif f.conectivo == 'D':
-            
-                valor = izq or der
-            
-            elif f.conectivo == 'I':
-            
-                valor = (not izq) or der
-            
-            elif f.conectivo == 'E':
-            
-                valor = izq == der
-            
-            valores.append(valor)
-            
-            return valor
+                if f.conectivo == 'C':
+                
+                    valor = izq and der
+                
+                elif f.conectivo == 'D':
+                
+                    valor = izq or der
+                
+                elif f.conectivo == 'I':
+                
+                    valor = (not izq) or der
+                
+                elif f.conectivo == 'E':
+                
+                    valor = izq == der
+                
+                valores.append(valor)
+                
+                return valor
 
-    evalua(self)
-    return valores
-
-
+        evalua(self)
+        return valores
 
     # Devuelve una lista de listas correspondientes a la tabla de verdad
-    def renglones_verdad(self):
+    def renglones_verdad(self) -> List[List[int]]
     
-        return []
+        def cuenta_variables(f):
+            
+            if f.conectivo is None:
+            
+                return {f.izquierda}
+            
+            elif f.conectivo == 'N':
+            
+                return cuenta_variables(f.izquierda)
+            
+            else:
+            
+                return cuenta_variables(f.izquierda).union(cuenta_variables(f.derecha))
 
+        variables = sorted(list(cuenta_variables(self)))
+        n = len(variables)
+        
+        combinaciones = list(product([0, 1], repeat=n))
+
+        # Encabezado: x1, x2, ..., fórmula compuesta
+        encabezado = ['x' + str(i) for i in variables]
+        subvalores = self.evalua_sub([0] * n)
+        encabezado += ['x' + str(i + 1 + max(variables)) for i in range(len(subvalores) - n)]
+
+        tabla = [encabezado]
+        
+        for c in combinaciones:
+        
+            resultado = self.evalua_sub(list(c))
+            fila = list(c) + resultado[n:]
+            tabla.append(fila)
+
+        return tabla
 
     # Devuelve una cadena que indica si la fórmula es taulogía, contingencia o contradicción.
-    def tipo_formula(self):
+    def tipo_formula(self) -> str:
+        
+        tabla = self.renglones_verdad()
+        resultados = [fila[-1] for fila in tabla[1:]]
+        
+        if all(resultados):
+        
+            return 'T'  # Tautología
+        
+        elif not any(resultados):
+        
+            return 'C'  # Contradicción
+        
+        else:
+        
+            return 'N'  # La otra cosa de nombre raro.
 
-        return ""
 
 
     # Crea un archivo .tex que contiene un documento de LaTex con la tabla de verdad en LaTex.
     def LaTex(self):
 
-        return 0
+        tabla = self.renglones_verdad()
+        with open(nombre + ".tex", "w") as f:
+            
+            f.write("\\documentclass{article}\n\\begin{document}\n\n")
+            f.write("\\begin{center}\n\\begin{tabular}{|" + "c|" * len(tabla[0]) + "}\n\\hline\n")
+            
+            encabezado = " & ".join(tabla[0]) + " \\\\\n\\hline\n"
+            f.write(encabezado)
+            
+            for fila in tabla[1:]:
+            
+                linea = " & ".join(str(e) for e in fila) + " \\\\\n"
+                f.write(linea)
+            
+            f.write("\\hline\n\\end{tabular}\n\\end{center}\n\n\\end{document}")
