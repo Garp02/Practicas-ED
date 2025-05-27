@@ -158,20 +158,46 @@ class Formula:
 
 
     # Crea un archivo .tex que contiene un documento de LaTex con la tabla de verdad en LaTex.
-    def LaTex(self):
-
+    def LaTex(self, nombre: str):
         tabla = self.renglones_verdad()
+    
+        def formula_to_latex(f):
+            if f.conectivo is None:
+                return f"x{f.izquierda}"
+            elif f.conectivo == 'N':
+                return r"\lnot " + formula_to_latex(f.izquierda)
+            else:
+                left = formula_to_latex(f.izquierda)
+                right = formula_to_latex(f.derecha)
+                conectivos = {
+                    'C': r'\wedge',
+                    'D': r'\vee',
+                    'I': r'\rightarrow',
+                    'E': r'\leftrightarrow'
+                }
+                return f"({left} ${conectivos[f.conectivo]}$ {right})"
+    
+        formula_str = formula_to_latex(self)
+    
         with open(nombre + ".tex", "w") as f:
-            
-            f.write("\\documentclass{article}\n\\begin{document}\n\n")
-            f.write("\\begin{center}\n\\begin{tabular}{|" + "c|" * len(tabla[0]) + "}\n\\hline\n")
-            
-            encabezado = " & ".join(tabla[0]) + " \\\\\n\\hline\n"
+            f.write("\\documentclass{article}\n")
+            f.write("\\begin{document}\n\n")
+            f.write("\\begin{center}\n")
+            f.write("\\begin{tabular}{|" + "c|" * len(tabla[0]) + "}\n")
+            f.write("\\hline\n")
+    
+            # Encabezado: variables + fórmula en notación LaTeX
+            encabezado = " & ".join(tabla[0][:-1]) + f" & {formula_str} \\\\\n"
             f.write(encabezado)
-            
+            f.write("\\hline\n")
+    
+            # Filas de la tabla de verdad
             for fila in tabla[1:]:
-            
                 linea = " & ".join(str(e) for e in fila) + " \\\\\n"
                 f.write(linea)
-            
-            f.write("\\hline\n\\end{tabular}\n\\end{center}\n\n\\end{document}")
+    
+            f.write("\\hline\n")
+            f.write("\\end{tabular}\n")
+            f.write("\\end{center}\n\n")
+            f.write("\\end{document}")
+
