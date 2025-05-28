@@ -101,7 +101,7 @@ class Formula:
         return valores
 
     # Devuelve una lista de listas correspondientes a la tabla de verdad
-    def renglones_verdad(self) -> List[List[int]]
+    def renglones_verdad(self) -> List[List[int]]:
     
         def cuenta_variables(f):
             
